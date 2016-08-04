@@ -1,3 +1,3 @@
 class Place {
-  
+  Person patron;  
 }

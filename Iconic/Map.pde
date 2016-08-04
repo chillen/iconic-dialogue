@@ -10,6 +10,8 @@ class Map {
  }
  
  public char get(int row, int col) {
+   if (row < 0 || col < 0 || row >= getRowCount() || col >= getColCount())
+     return Constants.TILE_INVALID;
    return map.get(row).get(col);
  }
  
