@@ -9,11 +9,13 @@ int continueHeight;
 int continueWidth;
 int defaultFill = 230;
 
+boolean mindmapMode = false;
+
 void setup() {
   Table map = loadTable("assets/map.csv");
   fill(defaultFill);
   populateTiles();
-  world = new GameState(new Map(map), Constants.PHASE_TUTORIAL);
+  world = new GameState(new Map(map), Constants.PHASE_OVERWORLD);
   size(900,700);
   continueY = height-100;
   continueX = width/2;
@@ -97,10 +99,52 @@ void drawBackstory() {
 
 void drawOverworld() {
   drawMap(world.getMap());
+  if (mindmapMode)
+    drawMindmap();
+  else
+    drawInstructions();
+  drawInventory();
 }
 
 void drawPlace() {
   
+}
+
+void drawMindmap() {
+  
+}
+
+void drawInstructions() {
+  int topLeftX = 0;
+  int topLeftY = TILE_SIZE * world.getMap().getRowCount();
+  int bgWidth = TILE_SIZE * world.getMap().getColCount();
+  int bgHeight = height - topLeftY;
+  int padding = 10;
+  
+  String text = "Click on an icon to enter the location. Your known information is displayed on the right. "
+               +"Click on a piece of known information to explore its connections. ";
+  
+  fill(180);
+  rect(topLeftX, topLeftY, bgWidth, bgHeight);
+  fill(0);
+  text(text, topLeftX+padding, topLeftY+padding, bgWidth-2*padding, bgHeight-2*padding);
+  fill(defaultFill);
+}
+
+void drawInventory() {
+  int topLeftX = TILE_SIZE * world.getMap().getColCount();
+  int topLeftY = 0;
+  int bgWidth = width - topLeftX;
+  int bgHeight = height;
+  int padding = 10;
+  
+  fill(180,180,140);
+  rect(topLeftX, topLeftY, bgWidth, bgHeight);
+  fill(0);
+  textSize(24);
+  text("Information", topLeftX+padding, topLeftY+padding, bgWidth-2*padding, bgHeight-2*padding);
+  textSize(12);
+  fill(defaultFill);
 }
 
 void nextPhase() {
