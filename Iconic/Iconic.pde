@@ -1,6 +1,10 @@
-GameState world;
+import java.awt.Point;
 
+GameState world;
 HashMap<Character, PImage> tiles;
+HashMap<String, PImage> icons;
+ArrayList<Person> people;
+HashMap<Point, Place> places;
 final int TILE_SIZE = 24; // tiles are 64x64
 boolean rendered = false;
 int continueX;
@@ -8,19 +12,25 @@ int continueY;
 int continueHeight;
 int continueWidth;
 int defaultFill = 230;
+Place activePlace = null;
 
 boolean mindmapMode = false;
 
 void setup() {
-  Table map = loadTable("assets/map.csv");
+  Table map = loadTable("assets/tables/map.csv");
   fill(defaultFill);
-  populateTiles();
   world = new GameState(new Map(map), Constants.PHASE_OVERWORLD);
+  populateTiles();
   size(900,700);
   continueY = height-100;
   continueX = width/2;
   continueWidth = 100;
   continueHeight = 50;
+  
+  populateIcons();
+  initNPCs();
+  initPlaces();
+  initPlayer();
 }
 
 // Update model data separate from the draw loop
@@ -42,6 +52,225 @@ void draw() {
       drawPlace(); break;
   }  
   
+}
+
+void initPlayer() {
+  Information i;
+  
+  i = new Information("murder", loadImage("assets/icons/backstab.png"));
+  world.getPlayer().addKnowledge(new Knowledge(i));
+  
+  i = new Information("trade", loadImage("assets/icons/trade.png"));
+  world.getPlayer().addKnowledge(new Knowledge(i));
+  
+  i = new Information("stealing", loadImage("assets/icons/robber.png"));
+  world.getPlayer().addKnowledge(new Knowledge(i));
+}
+
+void populateIcons() {
+  Table infoTable = loadTable("assets/tables/information.csv", "header");
+  icons = new HashMap<String, PImage>();
+  for (TableRow info : infoTable.rows())
+    icons.put(info.getString("title"), loadImage("assets/icons/"+info.getString("filename")));
+}
+
+void initNPCs() {
+  people = new ArrayList<Person>();
+  loadNPCs();
+}
+
+// Very manually populated here.
+void initPlaces() {
+  // Just create blank places on the map
+  places = new HashMap<Point, Place>();
+  populatePlaces();
+}
+
+// This is pretty manually handled, but might be able to be pushed into a spreadsheet at some point
+void populatePlaces() {
+ Table npcTable = loadTable("assets/tables/npc.csv", "header");
+ 
+ for (int r = 0; r < world.getMap().getRowCount(); r++) {
+    for (int c = 0; c < world.getMap().getColCount(); c++) {
+       // manual coordinates
+       Map m = world.getMap();
+       
+       if (m.get(r, c) == 'm') {
+         Place p = new Mine("Mines", icons.get("mines"));
+         
+         places.put(new Point(r, c), p);
+       }
+       
+       if (m.get(r,c) == 'a') {
+        Place p = new Forest("Forest", icons.get("forest"));
+        places.put(new Point(r, c), p);
+       }
+       
+       // Buildings take a little more parsing
+       if (m.get(r,c) == 'b') {
+         String personName = npcTable.findRow(r+","+c, "building").getString("npc");
+         for (Person p : people) {
+           if (p.getName().equals(personName)) {
+             places.put(new Point(r, c), new Building(p, npcTable.findRow(r+","+c, "building").getString("buildingName"), icons.get(personName.toLowerCase())));
+           }
+         }
+       }
+    }
+  } 
+}
+
+void loadNPCs() {
+  Table npcs = loadTable("assets/tables/npc.csv", "header");  
+  Table infoTable = loadTable("assets/tables/information.csv", "header");
+
+  Person p = null;
+  
+  for (TableRow r : npcs.rows()) {
+    p = populateStats(r);
+    
+    // Look at each piece of info
+    for (TableRow info : infoTable.rows()) {
+      String title = info.getString("title");
+      PImage icon = loadImage("assets/icons/" + info.getString("filename"));
+      rollForKnowledge(p, new Information(title, icon), r.getString(title), info.getInt("DC"));
+    }
+    
+    for (Knowledge k : p.getMemories()) {
+      rollForLinkedInfo(p, k); 
+    }
+    people.add(p);
+  }  
+}
+
+// Look through the linked info and roll int + wisdom to add connected information
+void rollForLinkedInfo(Person p, Knowledge k) {
+   Table linkedTable = loadTable("assets/tables/links.csv", "header");
+   Table infoTable = loadTable("assets/tables/information.csv", "header");
+   String title = k.getInfo().getName();
+   
+   for (TableRow link : linkedTable.rows()) {
+     String a = link.getString("A");
+     String b = link.getString("B");
+     double weight = link.getDouble("Weight");
+     int dc, roll;
+     
+     // Populate with new info
+     if (a.equals(title) || b.equals(title)) {
+       // avoid duplicate info
+       if (!p.knowsAbout(a)) {
+         dc = infoTable.findRow(a, "title").getInt("DC");
+         roll = (int) random(1,21) + p.getInt();
+         if (roll >= dc) {
+           PImage icon = loadImage("assets/icons/" + infoTable.findRow(a, "title").getString("filename"));
+           Information info = new Information(a, icon);
+           p.addKnowledge(new Knowledge(info));
+         }
+       }
+       if (!p.knowsAbout(b)) {
+         dc = infoTable.findRow(b, "title").getInt("DC");
+         roll = (int) random(1,21) + p.getInt();
+         if (roll >= dc) {
+           PImage icon = loadImage("assets/icons/" + infoTable.findRow(b, "title").getString("filename"));
+           Information info = new Information(b, icon);
+           p.addKnowledge(new Knowledge(info));
+         }
+       }
+     }
+   }
+   
+   // Now that all of the connection info has been added, check for actual connections
+   for (TableRow link : linkedTable.rows()) {
+     String a = link.getString("A");
+     String b = link.getString("B");
+     double weight = link.getDouble("Weight");
+     int dc, roll;
+     
+     // If they know about both things, they roll wisdom to see if they are connected
+     if (p.knowsAbout(a) && p.knowsAbout(b)) {
+       roll = (int) random(1, 21) + p.getWis();
+       dc = link.getInt("DC");
+       if (roll >= dc) {
+         p.linkKnowledge(a, b, weight); 
+       }
+     }
+   }
+}
+
+void rollForKnowledge(Person p, Information info, String seed, int baseDC) {
+  String[] splitSeed = seed.split(",");
+  double f = random(0,1);
+  double i = random(0,1);
+  double r = random(0,1);
+  double e = random(0,1);
+  
+  // Flag symbol; x or ?
+  if (splitSeed.length == 1) {
+    
+    // Skip rolling
+    if (splitSeed[0].equals("x"))
+      return;
+      
+    // pure random
+    if (splitSeed[0].equals("?")) {
+      int roll = (int) random(1, 21); // [1,20)
+      
+      // check for d20 roll
+      if (roll + p.getInt() >= baseDC) {
+        p.addKnowledge( new Knowledge(info) );
+        return;
+      }
+    }
+  }
+  
+  for (String str : splitSeed) {
+   // Overwrite default DC if they have a new DC
+   if (str.contains("DC")) {
+     // Strip all non-numbers
+     str = str.replaceAll("\\D+","");
+     baseDC = Integer.parseInt(str);
+   }   
+   if (str.contains("F")) {
+     // Strip all non-numbers
+     str = str.replaceAll("\\D+","");
+     f = Double.parseDouble(str);
+   }
+   
+   if (str.contains("I")) {
+     // Strip all non-numbers
+     str = str.replaceAll("\\D+","");
+     i = Double.parseDouble(str);
+   }
+   
+   if (str.contains("R")) {
+     // Strip all non-numbers
+     str = str.replaceAll("\\D+","");
+     r = Double.parseDouble(str);
+   }
+   
+   if (str.contains("E")) {
+     // Strip all non-numbers
+     str = str.replaceAll("\\D+","");
+     e = Double.parseDouble(str);
+   }
+  }
+  
+  int roll = (int) random(1,21);
+  if (roll + p.getInt() >= baseDC) 
+    p.addKnowledge( new Knowledge(info, new Attitude(f,i,r,e)) );
+}
+
+Person populateStats(TableRow r) {
+  Person p;
+  String name = r.getString("npc");
+  PImage icon = loadImage("assets/icons/" + r.getString("icon"));
+  PImage avatar = loadImage("assets/avatars/" + r.getString("avatar"));
+  String role = r.getString("role");
+  int i = r.getInt("int");
+  int w = r.getInt("wis");
+  int c = r.getInt("cha");
+    
+  p = new Person(name, role, icon, avatar, i, w, c);
+  return p;
 }
 
 boolean overContinue() {
@@ -76,8 +305,6 @@ void drawTutorial() {
 }
 
 void drawBackstory() {
-  int paddingY = 100;
-  int paddingX = 50;
   int marginX = 50;
   int marginY = 100;
  
@@ -107,7 +334,11 @@ void drawOverworld() {
 }
 
 void drawPlace() {
-  
+  drawMap(world.getMap());
+  drawInventory();
+  if (activePlace == null)
+    return;
+  activePlace.render();
 }
 
 void drawMindmap() {
@@ -138,13 +369,24 @@ void drawInventory() {
   int bgHeight = height;
   int padding = 10;
   
-  fill(180,180,140);
-  rect(topLeftX, topLeftY, bgWidth, bgHeight);
-  fill(0);
-  textSize(24);
-  text("Information", topLeftX+padding, topLeftY+padding, bgWidth-2*padding, bgHeight-2*padding);
-  textSize(12);
-  fill(defaultFill);
+  pushMatrix();
+    translate(topLeftX, topLeftY);
+    fill(180,180,140);
+    rect(0, 0, bgWidth, bgHeight);
+    fill(0);
+    textSize(24);
+    text("Information", padding, padding, bgWidth-2*padding, bgHeight-2*padding);
+    drawInfo();
+    textSize(12);
+    fill(defaultFill);
+  popMatrix();
+}
+
+void drawInfo() {
+  for (int i = 0; i < world.getPlayer().getMemories().size(); i++) {
+    Knowledge k = world.getPlayer().getMemories().get(i);
+    image(k.getInfo().getIcon(), (i%5)*48+16, 48+(i/5)*48);
+  }
 }
 
 void nextPhase() {
@@ -156,7 +398,6 @@ void nextPhase() {
 
 // Handle non-controlP5 buttons
 void mouseClicked() {
-  
   if (world.getPhase() == Constants.PHASE_TUTORIAL || world.getPhase() == Constants.PHASE_BACKGROUND) {
     if (overContinue())
       nextPhase();
@@ -177,19 +418,13 @@ void mouseClicked() {
 }
 
 void handleEntityClick(GameState world, int row, int col) {
-  char entityAtClick = world.getMap().get(row, col);
-  
-  switch(entityAtClick) {
-   case 'b': handleHouseClick(world, row, col); break; 
+  if (places.containsKey(new Point(row, col))) {
+    Place p = places.get(new Point(row, col));
+    p.enterPlace();
+    activePlace = p;
+    world.setPhase(Constants.PHASE_PLACE);
   }
-  
 }
-
-void handleHouseClick(GameState world, int row, int col) {
-  char entityAtClick = world.getMap().get(row, col);
-}
-
-// Helper methods
 
 private void drawMap(Map map) {
   for (int r = 0; r < map.getRowCount(); r++) {
@@ -202,14 +437,8 @@ private void drawMap(Map map) {
 // Populate the tile images
 private void populateTiles() {
   tiles = new HashMap<Character, PImage>();
-  // Building
-  tiles.put(Constants.TILE_BUILDING, loadImage("assets/img/building.png"));
-  // Grass
-  tiles.put(Constants.TILE_GRASS, loadImage("assets/img/terrainTile3.png"));
-  // Dirt
-  tiles.put(Constants.TILE_DIRT, loadImage("assets/img/terrainTile4.png"));
-  // Trees
-  tiles.put(Constants.TILE_TREE, loadImage("assets/img/tree.png"));
-  // Road
-  tiles.put(Constants.TILE_ROAD, loadImage("assets/img/terrainTile1.png"));
+  Table legend = loadTable("assets/tables/legend.csv", "header");
+  for (TableRow row : legend.rows()) { 
+    tiles.put(row.getString("Symbol").charAt(0), loadImage("assets/tiles/" + row.getString("File")));
+  }
 }

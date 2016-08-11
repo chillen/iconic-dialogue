@@ -1,0 +1,6 @@
+npc,icon,avatar,role,buildingName,int,wis,cha,building,animals,dark,gem,lantern,mines,murder,ring,stealing,trade,dagger,spider,goldrick,emilia,polding,lidya,mikayla,forest
+Goldrick,g.png,80.png,Blacksmith,Hard Hammer Weaponry,1,0,1,"11,4",DC15,?,DC8,DC5,DC5,x,?,?,?,?,?,?,?,?,?,?,DC1
+Emilia,e.png,1.png,Innkeeper,The Quiet Giant Inn,0,0,0,"17,1",DC16,x,?,x,?,x,?,?,?,?,x,?,?,?,?,?,?
+Polding,p.png,17.png,Merchant,Polding's Wares,-1,3,-1,"12,11",DC20,x,?,?,?,x,?,?,?,?,x,?,?,?,?,?,?
+Lidya,l.png,13.png,Tavern Owner,The Foam and Flaggon,3,3,2,"18,15",DC18,x,DC15,x,?,?,?,?,?,?,?,?,?,?,?,?,?
+Mikayla,m.png,9.png,Hunter,Mikayla's Pelts,3,-2,2,"12,20",DC5,?,DC18,?,DC8,?,?,?,?,?,?,?,?,?,?,?,DC1

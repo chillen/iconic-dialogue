@@ -10,4 +10,7 @@ class Constants {
   public static final char TILE_GRASS = 'g';
   public static final char TILE_DIRT = 'd';
   public static final char TILE_INVALID = 'X';
+  
+  public static final byte FLAG_FOREST_ANIMALS = 50; 
+  public static final byte FLAG_MINE_HAS_TORCH = 51; 
 }

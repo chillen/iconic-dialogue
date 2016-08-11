@@ -1,0 +1,8 @@
+Symbol,Name,File
+g,Grass,terrainTile3.png
+d,Dirt,terrainTile4.png
+r,Road,terrainTile1.png
+b,Building,building.png
+t,Tree,tree.png
+m,Mine,terrainTile2.png
+a,Animal,pawprint.png
