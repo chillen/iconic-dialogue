@@ -1,0 +1,16 @@
+Content,NPC,Type,Attitude
+Welcome to the shop! Always something on sale for a friend.,Polding,welcome,friendly
+Welcome to the shop! We have fine wares.,Polding,welcome,neutral
+"Oh, it's you. I'm keeping an eye on you.",Polding,welcome,unfriendly
+"For a friend, I'm always willing to set down the hammer!",Goldrick,welcome,friendly
+"Welcome! I'm a bit busy, but we can talk.",Goldrick,welcome,neutral
+"Hey there. Don't go touching anything while I'm working, okay?",Goldrick,welcome,unfriendly
+"For you, we can break out the good wine tonight!",Emilia,welcome,friendly
+I hope we have everything you need to get a good rest!,Emilia,welcome,neutral
+"We might have a room available in the back. The one marked ""broom closet""",Emilia,welcome,unfriendly
+I'll grab a fresh mug for you!,Lidya,welcome,friendly
+Welcome to the tavern! Don't go spreading too much gossip.,Lidya,welcome,neutral
+No tabs.,Lidya,welcome,unfriendly
+We should go on a hunt together!,Mikayla,welcome,friendly
+"The hunting isn't great around here, but it keeps me busy.",Mikayla,welcome,neutral
+What do you want?,Mikayla,welcome,unfriendly

@@ -23,7 +23,7 @@ class Forest extends Place {
     
     pushMatrix();
       translate(super.padding, super.padding*2);
-      text(text, 0,0);
+      text(text, 0,0, TILE_SIZE * world.getMap().getColCount() - super.ACTION_WIDTH - super.padding, 200);
     popMatrix();
     relevantInfo(info);
   }

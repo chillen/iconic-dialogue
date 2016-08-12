@@ -13,10 +13,13 @@ int continueHeight;
 int continueWidth;
 int defaultFill = 230;
 Place activePlace = null;
+int ICON_SIZE = 16;
+ArrayList<Point> infoPoints;
 
 boolean mindmapMode = false;
 
 void setup() {
+  infoPoints = new ArrayList<Point>();
   Table map = loadTable("assets/tables/map.csv");
   fill(defaultFill);
   world = new GameState(new Map(map), Constants.PHASE_OVERWORLD);
@@ -383,10 +386,19 @@ void drawInventory() {
 }
 
 void drawInfo() {
+  int totalWidth = width - TILE_SIZE * world.getMap().getColCount();
+  int infoPerRow = 5;
+  //int padding = (totalWidth - ICON_SIZE * infoPerRow) / 2;
+  int mod = totalWidth / infoPerRow;
+  
+  imageMode(CENTER);
+  infoPoints.clear();
   for (int i = 0; i < world.getPlayer().getMemories().size(); i++) {
     Knowledge k = world.getPlayer().getMemories().get(i);
-    image(k.getInfo().getIcon(), (i%5)*48+16, 48+(i/5)*48);
+    infoPoints.add(new Point(mod/2+(i%5)*mod+width-totalWidth, mod+(i/5)*mod));
+    image(k.getInfo().getIcon(), mod/2+(i%5)*mod, mod+(i/5)*mod);
   }
+  imageMode(CORNER);
 }
 
 void nextPhase() {
@@ -409,18 +421,33 @@ void mouseClicked() {
     
     // if out of the grid, flag with -1
     if (gridCol > world.getMap().getColCount())
-      gridCol = -1;
+      handleInventoryClick();
     if (gridRow > world.getMap().getRowCount())
-      gridRow = -1;
+      activePlace.handleClick();
       
     handleEntityClick(world, gridRow, gridCol);
   }
 }
 
+void handleInventoryClick() {
+  
+  for (int i = 0; i < infoPoints.size(); i++) {
+    if (mouseX >= infoPoints.get(i).x-ICON_SIZE/2 && mouseX <= infoPoints.get(i).x+ICON_SIZE/2 && 
+        mouseY >= infoPoints.get(i).y-ICON_SIZE/2 && mouseY <= infoPoints.get(i).y+ICON_SIZE/2) {
+      handleInfoClick(world.getPlayer().getMemories().get(i));
+      break;
+    }
+  }
+}
+
+void handleInfoClick(Knowledge k) {
+  println(k.getInfo().getName()); 
+}
+
 void handleEntityClick(GameState world, int row, int col) {
   if (places.containsKey(new Point(row, col))) {
     Place p = places.get(new Point(row, col));
-    p.enterPlace();
+    p.enter();
     activePlace = p;
     world.setPhase(Constants.PHASE_PLACE);
   }

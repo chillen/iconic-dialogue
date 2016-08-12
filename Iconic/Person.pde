@@ -25,6 +25,7 @@ class Person extends Information {
   int getCha() { return charisma; }
   PImage getAvatar() { return avatar; }
   String getRole() { return role; }
+  double getTrust() { return trust; }
   
   void addItem(String i) {
    inventory.add(i); 

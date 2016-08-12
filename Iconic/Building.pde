@@ -1,25 +1,31 @@
 class Building extends Place {
   Person patron;
+  byte state;
+  private HashMap<String, String> welcome;
   
   Building(Person person, String name, PImage icon) {
     super(name, icon);
     this.patron = person;
+    this.state = Constants.BUILDING_EMPTY;
+    welcome = new HashMap<String, String>();
+    setupWelcome();
   }
   
   void specificRender() {
     ArrayList<String> info = new ArrayList<String>();
-    info.add(patron.getName().toLowerCase());
-    if (!world.getPlayer().knowsAbout(patron.getName().toLowerCase())) {
-      world.getPlayer().addKnowledge( new Knowledge( new Information( patron.getName().toLowerCase(), icons.get(patron.getName().toLowerCase()) ) ) );
-    }
+    info.add(patron.getName().toLowerCase());    
+    String welcomeMessage = "Hello!";
+    double trustThreshold = 0.3;
+    int innerWidth = TILE_SIZE * world.getMap().getColCount() - 96 - super.padding*2 - super.ACTION_WIDTH;
     
-    // XXX: Delete after
-    // shows all memories of the patron in a building
-    for (int i = 0; i < patron.getMemories().size(); i++) {
-        Knowledge k = patron.getMemories().get(i);
-        image(k.getInfo().getIcon(), (i%10)*48+115,15+(i/10)*48);
-      }
-    
+    // unfriendly
+    if (patron.getTrust() < 0.5 - trustThreshold) 
+      welcomeMessage = welcome.get("unfriendly");
+    else if (patron.getTrust() < 0.5 + trustThreshold) 
+      welcomeMessage = welcome.get("neutral");
+    else
+      welcomeMessage = welcome.get("friendly");
+              
     pushMatrix();
       translate(super.padding, super.padding-3);
       fill(icon.get(0,0));
@@ -33,8 +39,32 @@ class Building extends Place {
       text(patron.getName(), 96/2, 90);
       textAlign(LEFT);
       
-      
+      // inner content
+      pushMatrix();
+        fill(0);
+        translate(104, 0);
+        if (state == Constants.BUILDING_ENTERED) {
+          text(welcomeMessage, 0,super.padding, innerWidth, 200);
+        }
+      popMatrix();
     popMatrix();
     super.relevantInfo(info);
+  }
+  
+  // populates the welcome map with the relavent messages from the spreadsheet
+  void setupWelcome() {
+    Table welcomeTable = loadTable("assets/tables/text.csv", "header");
+    Iterable<TableRow> welcomeTextNPC = welcomeTable.findRows(patron.getName(), "NPC");
+    for (TableRow row : welcomeTextNPC) {
+      welcome.put(row.getString("Attitude"), row.getString("Content"));
+    }
+  }
+  
+  void initPlace() {
+    state = Constants.BUILDING_ENTERED;
+  }
+  
+  void leave() {
+    this.state = Constants.BUILDING_EMPTY;
   }
 }
