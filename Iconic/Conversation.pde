@@ -18,6 +18,8 @@ class Conversation {
     currentInfo = new ArrayList<Information>();
     bias = new Attitude(.25,.25,.25,.25);
     tooltip = "Click info to talk about it. Click the main topic to change it.";
+    // double check that the patron knows about the player
+    patron.addKnowledge( new Knowledge( new Information("player", "person", icons.get("player"))));
   }
   
   String getReaction() { return reaction; }
