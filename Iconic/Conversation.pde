@@ -46,9 +46,10 @@ class Conversation {
       speakAtNPC();
       respond();
       phase = Constants.TALK_NPC;
-      tooltip = "Telling you about this, " + patron.getName() + " sounds " + ambiguousAttitude() + " when mentioning this." ;
+      tooltip = patron.getName() + " sounds " + ambiguousAttitude() + " when mentioning this." ;
     }
     else if (phase == Constants.TALK_NPC) {
+      bias = new Attitude(.25, .25, .25, .25);
       phase = Constants.TALK_CHOOSE;
       currentInfo.clear();
       tooltip = "Click info to talk about it. Click the main topic to change it.";
@@ -100,6 +101,10 @@ class Conversation {
   }
   
   void setTopic(Information i) {
+    if (!patron.knowsAbout(i)) {
+      tooltip = patron.getName() + " does not know about that topic. They must know the main topic to discuss.";
+      return;
+    }
     topic = i; 
     if (!world.getPlayer().knowsAbout(i))
       world.getPlayer().addKnowledge(new Knowledge(i));
@@ -149,7 +154,9 @@ class Conversation {
     currentInfo.clear();
     currentInfo.add(response.getInfo());
     
-    
+    // if the player hasn't heard of it, they have now
+    if (!world.getPlayer().knowsAbout(response.getInfo().getName()))
+          world.getPlayer().addKnowledge( new Knowledge(response.getInfo()) );
   }
   
   // XXX Isn't handling linked information
