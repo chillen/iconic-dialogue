@@ -15,6 +15,11 @@ class Attitude {
     enjoyment = e;
   }
   
+  double getFear() { return fear; }
+  double getInterest() { return interest; }
+  double getRage() { return rage; }
+  double getEnjoyment() { return enjoyment; }
+  
   void setFear(double f) { fear = f; }
   void setInterest(double i) { interest = i; }
   void setRage(double r) { rage = r; }
@@ -24,5 +29,9 @@ class Attitude {
   void adjustInterest(double i) { interest += i; }
   void adjustRage(double r) { rage += r; }
   void adjustEnjoyment(double e) { enjoyment += e; }
+  
+  String toString() {
+    return String.format("{F: %.2f, I: %.2f, R: %.2f, E: %.2f}", fear, interest, rage, enjoyment); 
+  }
   
 }

@@ -1,8 +1,11 @@
 import java.awt.Point;
+import java.util.Map;
+import java.util.Iterator;
 
 GameState world;
 HashMap<Character, PImage> tiles;
 HashMap<String, PImage> icons;
+HashMap<String, String> categories;
 ArrayList<Person> people;
 HashMap<Point, Place> places;
 final int TILE_SIZE = 24; // tiles are 64x64
@@ -60,21 +63,25 @@ void draw() {
 void initPlayer() {
   Information i;
   
-  i = new Information("murder", loadImage("assets/icons/backstab.png"));
+  i = new Information("murder", "activity", loadImage("assets/icons/backstab.png"));
   world.getPlayer().addKnowledge(new Knowledge(i));
   
-  i = new Information("trade", loadImage("assets/icons/trade.png"));
+  i = new Information("trade", "activity", loadImage("assets/icons/trade.png"));
   world.getPlayer().addKnowledge(new Knowledge(i));
   
-  i = new Information("stealing", loadImage("assets/icons/robber.png"));
+  i = new Information("stealing", "activity", loadImage("assets/icons/robber.png"));
   world.getPlayer().addKnowledge(new Knowledge(i));
 }
 
+// also loads categories
 void populateIcons() {
   Table infoTable = loadTable("assets/tables/information.csv", "header");
   icons = new HashMap<String, PImage>();
+  categories = new HashMap<String, String>();
   for (TableRow info : infoTable.rows())
     icons.put(info.getString("title"), loadImage("assets/icons/"+info.getString("filename")));
+  for (TableRow info : infoTable.rows())
+    categories.put(info.getString("title"), info.getString("category"));
 }
 
 void initNPCs() {
@@ -134,8 +141,9 @@ void loadNPCs() {
     // Look at each piece of info
     for (TableRow info : infoTable.rows()) {
       String title = info.getString("title");
+      String category = info.getString("category");
       PImage icon = loadImage("assets/icons/" + info.getString("filename"));
-      rollForKnowledge(p, new Information(title, icon), r.getString(title), info.getInt("DC"));
+      rollForKnowledge(p, new Information(title, category, icon), r.getString(title), info.getInt("DC"));
     }
     
     for (Knowledge k : p.getMemories()) {
@@ -165,7 +173,7 @@ void rollForLinkedInfo(Person p, Knowledge k) {
          roll = (int) random(1,21) + p.getInt();
          if (roll >= dc) {
            PImage icon = loadImage("assets/icons/" + infoTable.findRow(a, "title").getString("filename"));
-           Information info = new Information(a, icon);
+           Information info = new Information(a, infoTable.findRow(a, "title").getString("category"), icon);
            p.addKnowledge(new Knowledge(info));
          }
        }
@@ -174,7 +182,7 @@ void rollForLinkedInfo(Person p, Knowledge k) {
          roll = (int) random(1,21) + p.getInt();
          if (roll >= dc) {
            PImage icon = loadImage("assets/icons/" + infoTable.findRow(b, "title").getString("filename"));
-           Information info = new Information(b, icon);
+           Information info = new Information(b, infoTable.findRow(b, "title").getString("category"), icon);
            p.addKnowledge(new Knowledge(info));
          }
        }
@@ -422,7 +430,7 @@ void mouseClicked() {
     // if out of the grid, flag with -1
     if (gridCol > world.getMap().getColCount())
       handleInventoryClick();
-    if (gridRow > world.getMap().getRowCount())
+    if (gridRow > world.getMap().getRowCount() && activePlace != null)
       activePlace.handleClick();
       
     handleEntityClick(world, gridRow, gridCol);
@@ -441,7 +449,9 @@ void handleInventoryClick() {
 }
 
 void handleInfoClick(Knowledge k) {
-  println(k.getInfo().getName()); 
+  if (world.getPlayer().isTalking() && activePlace instanceof Building) {
+    ((Building) activePlace).handleInfoClick(k.getInfo());
+  }
 }
 
 void handleEntityClick(GameState world, int row, int col) {

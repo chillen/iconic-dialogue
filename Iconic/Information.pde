@@ -13,6 +13,14 @@ class Information {
     this(name, "Unspecified", icon);
   }
   
+  String getCategory() {
+    return category;
+  }
+  
+  String toString() {
+    return name + ":" + category;
+  }
+  
   PImage getIcon() {
     return icon;
   }

@@ -146,11 +146,12 @@ abstract class Place {
   
   // register knowledge icons and render them 
   public void relevantInfo(ArrayList<String> info) {
+       
     renderRelevantPush();
     for (int i = 0; i < info.size(); i++) {
       String s = info.get(i);
       if (!world.getPlayer().knowsAbout(s))
-          world.getPlayer().addKnowledge(new Knowledge(new Information(s, icons.get(s))));
+          world.getPlayer().addKnowledge(new Knowledge(new Information(s, categories.get(s), icons.get(s))));
       image(icons.get(s), i*48, -20);
     }
     popMatrix();

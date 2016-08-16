@@ -11,9 +11,7 @@ class Mine extends Place {
   void specificRender() {
     ArrayList<String> info = new ArrayList<String>();
     info.add("mines");
-    
-    if (!world.getPlayer().knowsAbout("mines"))
-        world.getPlayer().addKnowledge(new Knowledge(new Information("mines", icons.get("mines"))));
-      relevantInfo(info);
+    relevantInfo(info);
     }
+
 }

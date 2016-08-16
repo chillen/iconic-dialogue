@@ -15,7 +15,7 @@ class Person extends Information {
     this.wisdom = wisdom;
     this.charisma = charisma;
     this.role = role;
-    this.trust = min((random(1,21) + charisma) / 20, 20);
+    this.trust = min((random(1,21) + charisma) / 20, 0.99);
     memory = new HashMap<String,Knowledge>();
     inventory = new ArrayList<String>();
   }
@@ -26,6 +26,7 @@ class Person extends Information {
   PImage getAvatar() { return avatar; }
   String getRole() { return role; }
   double getTrust() { return trust; }
+  void setTrust(double t) { trust = max(max(0, (float)t), min(1, (float)t)); }
   
   void addItem(String i) {
    inventory.add(i); 
@@ -35,8 +36,23 @@ class Person extends Information {
     return inventory.contains(s); 
   }
   
+  void removeItem(String i) {
+   inventory.remove(i); 
+  }
+  
   void addKnowledge(Knowledge k) {
     memory.put(k.getInfo().getName(), k);
+  }
+  
+  Attitude getAttitude(Information i) {
+    if (memory.containsKey(i.getName()))
+      return memory.get(i.getName()).getAttitude();
+    else return new Attitude();
+  }
+  
+  void setAttitude(Information i, Attitude a) {
+    if (memory.containsKey(i.getName()))
+      memory.get(i.getName()).setAttitude(a);
   }
   
   boolean knowsAbout(String info) {
@@ -45,6 +61,10 @@ class Person extends Information {
   
   boolean knowsAbout(Information info) {
     return memory.containsKey(info.getName()); 
+  }
+  
+  Knowledge getKnowledge(Information info) {
+    return memory.get(info.getName());
   }
   
   void linkKnowledge(String a, String b, double weight) {

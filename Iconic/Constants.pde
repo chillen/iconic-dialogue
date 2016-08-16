@@ -27,4 +27,8 @@ class Constants {
   public static final char TILE_GRASS = 'g';
   public static final char TILE_DIRT = 'd';
   public static final char TILE_INVALID = 'X';
+  
+  public static final byte TALK_CHOOSE = 16;
+  public static final byte TALK_BIAS = 17;
+  public static final byte TALK_NPC = 18;
 }
