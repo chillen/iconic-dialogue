@@ -2,6 +2,7 @@ class Knowledge {
  Information info;
  Attitude attitude;
  HashMap<Knowledge, Double> links;
+ private final double LINK_INCREASE = 0.05;
  
  Knowledge(Information info, Attitude attitude) {
    this.info = info;
@@ -34,12 +35,33 @@ class Knowledge {
  Information getInfo() { return info; }
  
  void increaseLink(Knowledge k) {
-   
+   if (links.containsKey(k))
+     links.put( k, Math.min(links.get(k) + LINK_INCREASE, 0.99) );
  }
  
- // XXX Perform a rebalancing of the links knowledge
+ void linkTo(Knowledge k) {
+   double d = 0;
+   if (k == this)
+     return;
+   if (linkedTo(k))
+     increaseLink(k);
+   else {
+     links.put(k, d);
+     increaseLink(k);
+   }
+ }
+ 
  void linkTo(Knowledge k, double weight) {
-   links.put(k, weight);
+   if (k != this)
+     links.put(k, weight);
+ }
+ 
+ boolean linkedTo(Knowledge k) {
+   for (Knowledge link : links.keySet()) {
+     if (k == link)
+       return true;
+   }
+   return false;
  }
  
  HashMap<Knowledge, Double> getLinks() {

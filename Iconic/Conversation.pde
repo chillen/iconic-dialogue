@@ -118,6 +118,13 @@ class Conversation {
     if (links.size() == 0) {
        currentInfo.clear();
        currentInfo.add(patron.getKnowledge(topic).getInfo());
+       System.out.println("------------------------------------");
+       System.out.printf("%s's Response to You\n", patron.getName());
+       System.out.println("------------------------------------");
+       System.out.printf("%s's knowledge of %s\n", patron.getName(), topic.getName());
+       System.out.println(patron.getKnowledge(topic));
+       System.out.println("------------------------------------");
+
        return;
     }
     Knowledge response = null;
@@ -154,16 +161,38 @@ class Conversation {
     currentInfo.clear();
     currentInfo.add(response.getInfo());
     
+   System.out.println("------------------------------------");
+   System.out.printf("%s's Response to You\n", patron.getName());
+   System.out.println("------------------------------------");
+   System.out.printf("%s's knowledge of %s\n", patron.getName(), response.getInfo().getName());
+   System.out.println(response);
+   System.out.println("------------------------------------");
+    
     // if the player hasn't heard of it, they have now
     if (!world.getPlayer().knowsAbout(response.getInfo().getName()))
           world.getPlayer().addKnowledge( new Knowledge(response.getInfo()) );
   }
   
-  // XXX Isn't handling linked information
   void speakAtNPC() {
+    // Add the information with bias, or change their attitude
     for (Information i : currentInfo) {
       impart(new Knowledge(i, bias));
     }  
+    
+    // link all information to one another
+    for (int i = 0; i < currentInfo.size(); i++) {
+      for (int j = 0; j < currentInfo.size(); j++) {
+        if (i == j)
+          continue;
+        patron.getKnowledge(currentInfo.get(i)).linkTo(patron.getKnowledge(currentInfo.get(j)));
+      }
+    }
+    
+    // link main topic to everything
+    for (Information i : currentInfo) {
+      patron.getKnowledge(i).linkTo(patron.getKnowledge(topic));
+      patron.getKnowledge(topic).linkTo(patron.getKnowledge(i));
+    }
   }
   
   // Only deals with the first thing mentioned
@@ -212,6 +241,8 @@ class Conversation {
     // Check if they have the knowledge. If they do not, simply impart it. If they do, adjust their knowledge
     if (patron.knowsAbout(k.getInfo())) {
       System.out.println("------------------------------------");
+      System.out.printf("You spoke to %s\n", patron.getName());
+      System.out.println("------------------------------------");      
       System.out.printf("This patron currently trusts you %.2f\n", patron.getTrust()); 
       patron.setTrust(adjustTrust(k));
       System.out.printf("You are discussing %s\n", k.getInfo().getName());
@@ -227,6 +258,8 @@ class Conversation {
     else {
       patron.addKnowledge(k);
       System.out.println("------------------------------------");
+      System.out.printf("You spoke to %s\n", patron.getName());
+      System.out.println("---------------------------------");
       System.out.printf("This patron currently trusts you %.2f\n", patron.getTrust()); 
       System.out.printf("Their attitude towards %s is currently %s\n", k.getInfo().getName(), patron.getAttitude(k.getInfo()));
       System.out.println("------------------------------------");
