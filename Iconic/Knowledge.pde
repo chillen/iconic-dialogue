@@ -51,6 +51,10 @@ class Knowledge {
    }
  }
  
+ double getLink(Knowledge k) {
+   return links.get(k);
+ }
+ 
  void linkTo(Knowledge k, double weight) {
    if (k != this)
      links.put(k, weight);
@@ -71,7 +75,7 @@ class Knowledge {
  String stringLinks() {
    String s = ":";
    for (Knowledge k : links.keySet()) {
-     s += k.getInfo().getName() + ":";
+     s += String.format("%s (%.2f):",k.getInfo().getName(), getLink(k));
    }
    return s;
  }

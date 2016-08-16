@@ -71,6 +71,9 @@ void initPlayer() {
   
   i = new Information("stealing", "activity", loadImage("assets/icons/robber.png"));
   world.getPlayer().addKnowledge(new Knowledge(i));
+  
+  i = new Information("player", "person", loadImage("assets/icons/meeple.png"));
+  world.getPlayer().addKnowledge(new Knowledge(i));
 }
 
 // also loads categories

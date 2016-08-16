@@ -41,7 +41,8 @@ class Person extends Information {
   }
   
   void addKnowledge(Knowledge k) {
-    memory.put(k.getInfo().getName(), k);
+    if (!knowsAbout(k.getInfo().getName()))
+      memory.put(k.getInfo().getName(), k);
   }
   
   Attitude getAttitude(Information i) {
